@@ -1,0 +1,110 @@
+### =====  User-defined variables/parameters/paths ===== ###
+
+# Urban area vector file
+urban_area_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/2016_urban_area.geojson"
+
+# LA County boundary file
+la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/la_county_bound_simplified.gpkg"
+
+# WRF base directory 
+wrf_dir: "/project2/zhan248_1326/hhao4018/WRFv4.6.1_Modified_AHoption_noChem/test"
+
+# Where to save plots
+plot_dir: "/home1/kojoseph/ah-la-paper/figs"
+
+# Where to save processed delta df's
+deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas"
+
+# Variables for subsetting
+wrf_vars:
+  - "T2"
+  - "TC_URB"
+  - "WS"
+  - "PBLH"
+
+# Seasonal map
+season_map:
+  "summer": 8
+  "winter": 12
+
+# Months to process
+months: 
+  - 8
+  - 12
+
+# List of [control, target] pairs
+control_target_pairs:
+  - ["ah_off", "ah_default"]
+  - ["ah_default", "ah_elec_low"]
+  - ["ah_default", "ah_elec_medium"]
+  - ["ah_default", "ah_elec_high"]
+
+# Dictionary that maps months/case combo with directory paths 
+wrf_dir_map:
+  "08":
+    "ah_off": "JOE_Default_2016_08_ah=0"
+    "ah_default": "JOE_Default_08_ah=2_GDAS_frac_urb"
+    "ah_elec_low": "JOE_Low_08_ah=2_GDAS_frac_urb"
+    "ah_elec_medium": "JOE_Medium_08_ah=2_GDAS_frac_urb"
+    "ah_elec_high": "JOE_High_08_ah=2_GDAS_frac_urb"
+  "12":
+    "ah_off": "JOE_Default_2016_12_ah=0"
+    "ah_default": "JOE_Default_12_ah=2_GDAS_frac_urb"
+    "ah_elec_low": "JOE_Low_12_ah=2_GDAS_frac_urb"
+    "ah_elec_medium": "JOE_Medium_12_ah=2_GDAS_frac_urb"
+    "ah_elec_high": "JOE_High_12_ah=2_GDAS_frac_urb"
+
+# Visual settings for line plots
+line_plot_vis_settings:
+  line_plot_figsize:
+    - 6
+    - 4
+  axhline_color: "black"
+  axhline_linestyle: "--"
+  axhline_linewidth: 1
+  axhline_alpha: 0.5
+  summer: 
+    line_color: "red"
+    line_label: "summer"
+    line_linewidth: 2
+    line_alpha: 0.7
+    fill_alpha: 0.2
+    fill_edgecolor: "red"
+    fill_facecolor: "red"
+    fill_linewidth: 2
+  winter: 
+    line_color: "blue"
+    line_label: "winter"
+    line_linewidth: 2
+    line_alpha: 0.7
+    fill_alpha: 0.2
+    fill_edgecolor: "blue"
+    fill_facecolor: "blue"
+    fill_linewidth: 2
+  grid_linewidth: 0.5
+  grid_alpha: 0.5
+  grid_linestyle: "--"
+  grid_linewidth: 1
+  lineplot_cmap: "magma"
+
+# Visual settings for diurnal animations
+diurnal_ani_vis_settings:
+  diurnal_ani_figsize:
+    - 8
+    - 6
+  map_extent:
+    - -119
+    - -117.5
+    - 33.3
+    - 34.8
+  ani_cmap: "OrRd"
+  coastline_color: "gray"
+  ani_fps: 3
+  ani_interval: 1000
+
+
+
+
+
+
+
