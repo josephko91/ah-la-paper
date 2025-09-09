@@ -1,7 +1,7 @@
 ### =====  User-defined variables/parameters/paths ===== ###
 
 # Urban area vector file
-urban_area_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/2016_urban_area.geojson"
+urban_area_file: "/home1/kojoseph/ah-la-paper/data/wrf_urban_mask.gpkg"
 
 # LA County boundary file
 la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/la_county_bound_simplified.gpkg"
@@ -10,10 +10,10 @@ la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/bo
 wrf_dir: "/project2/zhan248_1326/hhao4018/WRFv4.6.1_Modified_AHoption_noChem/test"
 
 # Where to save plots
-plot_dir: "/home1/kojoseph/ah-la-paper/figs"
+plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf"
 
 # Where to save processed delta df's
-deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas"
+deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf"
 
 # Variables for subsetting
 wrf_vars:

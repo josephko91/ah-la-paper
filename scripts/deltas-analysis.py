@@ -230,6 +230,7 @@ def main():
 
     ### ===== Calculate Deltas ===== ###
     # get list of expected delta files
+    os.makedirs(deltas_dir, exist_ok=True)
     expected_delta_filelist = []
     for month in months:
         for pair in control_target_pairs:
@@ -256,11 +257,12 @@ def main():
     ### ============================== ###
 
     ### ===== Diurnal Line Plots ===== ###
+    os.makedirs(plot_dir, exist_ok=True)
     create_diurnal_line_plots(deltas, wrf_vars, control_target_pairs, season_map, plot_dir, labels, line_plot_vis_settings)
     ### =============================== ###
 
     ### ===== Histograms ===== ###
-    create_histograms(deltas, wrf_vars, control_target_pairs, season_map, plot_dir, labels, line_plot_vis_settings)
+    # create_histograms(deltas, wrf_vars, control_target_pairs, season_map, plot_dir, labels, line_plot_vis_settings)
     ### =============================== ###
 
     ### ===== Diurnal Animations ===== ###
