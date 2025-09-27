@@ -257,8 +257,8 @@ def main():
     ### ============================== ###
 
     ### ===== Diurnal Line Plots ===== ###
-    os.makedirs(plot_dir, exist_ok=True)
-    create_diurnal_line_plots(deltas, wrf_vars, control_target_pairs, season_map, plot_dir, labels, line_plot_vis_settings)
+    # os.makedirs(plot_dir, exist_ok=True)
+    # create_diurnal_line_plots(deltas, wrf_vars, control_target_pairs, season_map, plot_dir, labels, line_plot_vis_settings)
     ### =============================== ###
 
     ### ===== Histograms ===== ###

@@ -10,10 +10,10 @@ la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/bo
 wrf_dir: "/project2/zhan248_1326/hhao4018/WRFv4.6.1_Modified_AHoption_noChem/test"
 
 # Where to save plots
-plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf"
+plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf-v2"
 
 # Where to save processed delta df's
-deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf"
+deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf-v2"
 
 # Variables for subsetting
 wrf_vars:
@@ -42,17 +42,17 @@ control_target_pairs:
 # Dictionary that maps months/case combo with directory paths 
 wrf_dir_map:
   "08":
-    "ah_off": "JOE_Default_2016_08_ah=0"
-    "ah_default": "JOE_Default_08_ah=2_GDAS_frac_urb"
-    "ah_elec_low": "JOE_Low_08_ah=2_GDAS_frac_urb"
-    "ah_elec_medium": "JOE_Medium_08_ah=2_GDAS_frac_urb"
-    "ah_elec_high": "JOE_High_08_ah=2_GDAS_frac_urb"
+    "ah_off": "JOE_Default_2016_08_ah=0_v2"
+    "ah_default": "JOE_Default_08_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_low": "JOE_Low_08_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_medium": "JOE_Medium_08_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_high": "JOE_High_08_ah=2_GDAS_frac_urb_v2"
   "12":
-    "ah_off": "JOE_Default_2016_12_ah=0"
-    "ah_default": "JOE_Default_12_ah=2_GDAS_frac_urb"
-    "ah_elec_low": "JOE_Low_12_ah=2_GDAS_frac_urb"
-    "ah_elec_medium": "JOE_Medium_12_ah=2_GDAS_frac_urb"
-    "ah_elec_high": "JOE_High_12_ah=2_GDAS_frac_urb"
+    "ah_off": "JOE_Default_2016_12_ah=0_v2"
+    "ah_default": "JOE_Default_12_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_low": "JOE_Low_12_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_medium": "JOE_Medium_12_ah=2_GDAS_frac_urb_v2"
+    "ah_elec_high": "JOE_High_12_ah=2_GDAS_frac_urb_v2"
 
 # Visual settings for line plots
 line_plot_vis_settings:
