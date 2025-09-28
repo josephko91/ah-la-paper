@@ -1,7 +1,7 @@
 ### =====  User-defined variables/parameters/paths ===== ###
 
 # Urban area vector file
-urban_area_file: "/home1/kojoseph/ah-la-paper/data/wrf_urban_mask.gpkg"
+urban_area_file: "/home1/kojoseph/ah-la-paper/data/wrf_urban_mask-v2.gpkg"
 
 # LA County boundary file
 la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/la_county_bound_simplified.gpkg"

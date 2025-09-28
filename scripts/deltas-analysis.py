@@ -222,10 +222,11 @@ def main():
     labels = get_plot_labels()
     
     ### ===== Calculate and set urban boundary ===== ###
-    urban = gpd.read_file(urban_area_file)
-    la_county_boundary = gpd.read_file(la_county_boundary_file)
-    urban = urban.to_crs(la_county_boundary.crs)
-    urban_la_county = urban.overlay(la_county_boundary)
+    # urban = gpd.read_file(urban_area_file)
+    # la_county_boundary = gpd.read_file(la_county_boundary_file)
+    # urban = urban.to_crs(la_county_boundary.crs)
+    # urban_la_county = urban.overlay(la_county_boundary)
+    urban_la_county = gpd.read_file(urban_area_file) # urban mask modified to already be clipped by la county
     ### =============================== ###
 
     ### ===== Calculate Deltas ===== ###
