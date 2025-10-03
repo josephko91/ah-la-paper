@@ -31,26 +31,71 @@ import xwrf
 import dask
 from dask.distributed import Client, LocalCluster
 
-def process_delta(control_path, target_path, wrf_vars, clip_gdf, month):
+# def process_delta(control_path, target_path, wrf_vars, clip_gdf, month):
+#     print('inside process_delta()')
+#     if (month >= 3) and (month < 11): # PDT (~March - Nov)
+#         timezone_shift =-7
+#     else: # PST
+#         timezone_shift=-8
+#     # get control data
+#     filelist_control = glob.glob(os.path.join(control_path, 'wrfout_d02*'))
+#     ds_control = xr.open_mfdataset(filelist_control, 
+#                         engine="netcdf4",
+#                         concat_dim="Time",
+#                         combine="nested").xwrf.postprocess()
+#     ds_control = ds_control.sortby('Time')
+#     # get target data
+#     filelist_target = glob.glob(os.path.join(target_path, 'wrfout_d02*'))
+#     ds_target = xr.open_mfdataset(filelist_target, 
+#                         engine="netcdf4",
+#                         concat_dim="Time",
+#                         combine="nested").xwrf.postprocess()
+#     ds_target = ds_target.sortby('Time')
+#     # calculate wind speed if necessary
+#     if 'WS' in wrf_vars:
+#         calc_ws(ds_control)
+#         calc_ws(ds_target)
+
+#     # subset ds
+#     control = ds_control[wrf_vars]
+#     target = ds_target[wrf_vars]
+#     delta = target - control
+#     delta = delta.compute()
+#     # assign crs
+#     wrf_crs = ds_control.wrf_projection.item()
+#     delta = delta.rio.write_crs(wrf_crs)
+#     # clip by urban LA County pixels
+#     delta_clipped = delta.rio.clip(clip_gdf.geometry.values, clip_gdf.crs)
+#     # remove first two days (spin-up) and last timestep (extra timestep)
+#     delta_clipped = delta_clipped.isel(Time=slice(48, -1))
+#     # create local hour variable
+#     delta_clipped = delta_clipped.assign_coords(hour=(delta_clipped['Time'].dt.hour+timezone_shift)%24)
+#     print("SUCCESS!!!")
+#     return delta_clipped
+
+def process_delta(control_path, target_path, wrf_vars, la_county_gdf, month):
     print('inside process_delta()')
     if (month >= 3) and (month < 11): # PDT (~March - Nov)
-        timezone_shift =-7
+        timezone_shift = -7
     else: # PST
-        timezone_shift=-8
+        timezone_shift = -8
+
     # get control data
     filelist_control = glob.glob(os.path.join(control_path, 'wrfout_d02*'))
     ds_control = xr.open_mfdataset(filelist_control, 
-                        engine="netcdf4",
-                        concat_dim="Time",
-                        combine="nested").xwrf.postprocess()
+                                   engine="netcdf4",
+                                   concat_dim="Time",
+                                   combine="nested").xwrf.postprocess()
     ds_control = ds_control.sortby('Time')
+
     # get target data
     filelist_target = glob.glob(os.path.join(target_path, 'wrfout_d02*'))
     ds_target = xr.open_mfdataset(filelist_target, 
-                        engine="netcdf4",
-                        concat_dim="Time",
-                        combine="nested").xwrf.postprocess()
+                                  engine="netcdf4",
+                                  concat_dim="Time",
+                                  combine="nested").xwrf.postprocess()
     ds_target = ds_target.sortby('Time')
+
     # calculate wind speed if necessary
     if 'WS' in wrf_vars:
         calc_ws(ds_control)
@@ -61,17 +106,34 @@ def process_delta(control_path, target_path, wrf_vars, clip_gdf, month):
     target = ds_target[wrf_vars]
     delta = target - control
     delta = delta.compute()
+
     # assign crs
     wrf_crs = ds_control.wrf_projection.item()
     delta = delta.rio.write_crs(wrf_crs)
-    # clip by urban LA County pixels
-    delta_clipped = delta.rio.clip(clip_gdf.geometry.values, clip_gdf.crs)
+
+    # --- STEP 1: mask urban pixels using FRC_URB2D ---
+    # assume FRC_URB2D is one of wrf_vars
+    urban_mask = control["FRC_URB2D"] > 0
+    delta_urban = delta.where(urban_mask)
+
+    # --- STEP 2: clip with LA county polygon ---
+    # reproject LA county boundary to match WRF delta CRS
+    # la_county_proj = la_county_gdf.to_crs(delta_urban.rio.crs)
+    la_county_proj = la_county_gdf.to_crs(wrf_crs)
+    print('DEBUG: delta_urban crs = ', delta_urban.rio.crs)
+    print('DEBUG: la_county_proj = ', la_county_proj.crs)
+    # delta_clipped = delta_urban # testing
+    delta_clipped = delta_urban.rio.clip(la_county_proj.geometry.values, la_county_proj.crs)
+
     # remove first two days (spin-up) and last timestep (extra timestep)
     delta_clipped = delta_clipped.isel(Time=slice(48, -1))
+
     # create local hour variable
-    delta_clipped = delta_clipped.assign_coords(hour=(delta_clipped['Time'].dt.hour+timezone_shift)%24)
+    delta_clipped = delta_clipped.assign_coords(hour=(delta_clipped['Time'].dt.hour + timezone_shift) % 24)
+
     print("SUCCESS!!!")
     return delta_clipped
+
 
 def apply_time_encoding(ds, reference):
     if 'Time' in ds.coords:
@@ -223,10 +285,10 @@ def main():
     
     ### ===== Calculate and set urban boundary ===== ###
     # urban = gpd.read_file(urban_area_file)
-    # la_county_boundary = gpd.read_file(la_county_boundary_file)
+    la_county_boundary = gpd.read_file(la_county_boundary_file)
     # urban = urban.to_crs(la_county_boundary.crs)
     # urban_la_county = urban.overlay(la_county_boundary)
-    urban_la_county = gpd.read_file(urban_area_file) # urban mask modified to already be clipped by la county
+    # urban_la_county = gpd.read_file(urban_area_file) # urban mask modified to already be clipped by la county
     ### =============================== ###
 
     ### ===== Calculate Deltas ===== ###
@@ -254,7 +316,7 @@ def main():
         print(f"In set1 but not set2: {set1 - set2}")
         print(f"In set2 but not set1: {set2 - set1}")
         print("Deltas directory does not contain all necessary files. Re-calculating deltas....")
-        deltas = calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_vars, urban_la_county)
+        deltas = calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_vars, la_county_boundary)
     ### ============================== ###
 
     ### ===== Diurnal Line Plots ===== ###
