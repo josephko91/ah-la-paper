@@ -100,12 +100,20 @@ def process_delta(control_path, target_path, wrf_vars, la_county_gdf, month):
     if 'WS' in wrf_vars:
         calc_ws(ds_control)
         calc_ws(ds_target)
-
+    
     # subset ds
     control = ds_control[wrf_vars]
     target = ds_target[wrf_vars]
     delta = target - control
     delta = delta.compute()
+
+    if 'FRC_URB2D' in wrf_vars:
+        # Copy the variable to avoid sharing attributes
+        frc_urb2d_copy = ds_control['FRC_URB2D'].copy()
+        # Remove the conflicting grid_mapping attribute
+        frc_urb2d_copy.attrs.pop('grid_mapping', None)
+        # Insert into delta
+        delta['FRC_URB2D'] = frc_urb2d_copy
 
     # assign crs
     wrf_crs = ds_control.wrf_projection.item()
@@ -113,8 +121,9 @@ def process_delta(control_path, target_path, wrf_vars, la_county_gdf, month):
 
     # --- STEP 1: mask urban pixels using FRC_URB2D ---
     # assume FRC_URB2D is one of wrf_vars
-    urban_mask = control["FRC_URB2D"] > 0
+    urban_mask = control["FRC_URB2D"] > 0.5
     delta_urban = delta.where(urban_mask)
+    delta_urban = delta_urban.rio.write_crs(wrf_crs)
 
     # --- STEP 2: clip with LA county polygon ---
     # reproject LA county boundary to match WRF delta CRS
@@ -127,25 +136,50 @@ def process_delta(control_path, target_path, wrf_vars, la_county_gdf, month):
 
     # remove first two days (spin-up) and last timestep (extra timestep)
     delta_clipped = delta_clipped.isel(Time=slice(48, -1))
+    delta = delta.isel(Time=slice(48, -1))
 
     # create local hour variable
     delta_clipped = delta_clipped.assign_coords(hour=(delta_clipped['Time'].dt.hour + timezone_shift) % 24)
+    delta = delta.assign_coords(hour=(delta['Time'].dt.hour + timezone_shift)%24)
 
     print("SUCCESS!!!")
-    return delta_clipped
+    return delta_clipped, delta
 
 
-def apply_time_encoding(ds, reference):
+# def apply_time_encoding(ds, reference):
+#     if 'Time' in ds.coords:
+#         encoding = {
+#             'Time': {
+#                 'units': f'hours since {reference}',
+#                 'calendar': 'gregorian',
+#                 'dtype': 'float64'
+#             }
+#         }
+#         return ds, encoding
+#     return ds, {}
+
+def fix_time_encoding(ds):
     if 'Time' in ds.coords:
-        encoding = {
-            'Time': {
-                'units': f'hours since {reference}',
-                'calendar': 'gregorian',
-                'dtype': 'float64'
-            }
-        }
-        return ds, encoding
-    return ds, {}
+        # convert to numpy datetime64[ns]
+        time_vals = ds['Time'].values
+        try:
+            # WRF sometimes stores Time as float minutes since a reference
+            # If it's already datetime64, this does nothing
+            time_vals = np.array(time_vals, dtype='datetime64[ns]')
+        except Exception:
+            # fallback: use cftime
+            import cftime
+            time_vals = np.array([cftime.DatetimeGregorian(2016,8,10) + np.timedelta64(int(t), 'm') 
+                                  for t in ds['Time'].values], dtype='datetime64[ns]')
+
+        # assign new Time coordinate
+        ds = ds.assign_coords(Time=time_vals)
+
+        # remove old encoding (especially units)
+        if 'Time' in ds.encoding:
+            ds.encoding['Time'].pop('units', None)
+            ds.encoding['Time'].pop('calendar', None)
+    return ds
 
 def calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_vars, boundary):
     deltas = {}
@@ -158,10 +192,12 @@ def calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_var
             target_dir = wrf_dir_map[str(month).zfill(2)][pair[1]]
             control_path = os.path.join(wrf_dir, control_dir)
             target_path = os.path.join(wrf_dir, target_dir)
-            delta_clipped = process_delta(control_path, target_path, wrf_vars, boundary, month)
+            delta_clipped, delta = process_delta(control_path, target_path, wrf_vars, boundary, month)
             # Remove XTIME coordinate to avoid issues with saving as netcdf
             if 'XTIME' in delta_clipped.coords:
                 delta_clipped = delta_clipped.drop_vars('XTIME')
+            if 'XTIME' in delta.coords:
+                delta = delta.drop_vars('XTIME')
             # # apply time encoding to avoid saving bug issues
             # common_time_reference = '1900-01-01 00:00:00'
             # ds, encoding = apply_time_encoding(delta_clipped, common_time_reference)
@@ -171,6 +207,27 @@ def calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_var
             delta_savepath = os.path.join(deltas_dir, delta_filename)
             delta_clipped.to_netcdf(delta_savepath)
             deltas[delta_key] = delta_clipped
+            # save non-clipped deltas
+            deltas_all_dir = os.path.join(deltas_dir, '..', 'deltas-all-wrf-v5')
+            os.makedirs(deltas_all_dir, exist_ok=True)
+            delta_all_savepath = os.path.join(deltas_all_dir, delta_filename)
+            # delta = fix_time_encoding(delta)
+            # print("=== DEBUG: inspecting Time coordinate ===")
+            # print("Time dtype:", delta['Time'].dtype)
+            # print("Time values (first 5):", delta['Time'].values[:5])
+            # print("Time coords:", delta.coords['Time'])
+            # print("Time attrs:", delta['Time'].attrs)
+            # print("Time encoding:", delta.encoding.get('Time', {}))
+            # print("--------")
+            # if np.issubdtype(delta['Time'].dtype, np.timedelta64):
+            #     print("Time is timedelta — needs conversion to datetime64")
+            # elif np.issubdtype(delta['Time'].dtype, np.datetime64):
+            #     print("Time is already datetime64")
+            # else:
+            #     print("Time is numeric or unknown type:", delta['Time'].dtype)
+            # for var in delta.data_vars:
+            #     print(var, "encoding:", delta[var].encoding)
+            delta.to_netcdf(delta_all_savepath)
     return deltas
 
 def load_deltas(deltas_dir):
@@ -255,8 +312,8 @@ def calc_ws(ds):
 def get_plot_labels():
     labels = {}
     degree_sign = u'\N{DEGREE SIGN}'
-    labels['T2'] = r'$\mathrm{{\Delta}T_{air}}$ (' + degree_sign + 'C)'
-    labels['TC_URB'] = r'$\mathrm{{\Delta}T_{canopy}}$ (' + degree_sign + 'C)'
+    labels['T2'] = r'$\mathrm{{\Delta}T_{2m}}$ (' + degree_sign + 'C)'
+    labels['TC_URB'] = r'$\mathrm{{\Delta}T_{c}}$ (' + degree_sign + 'C)'
     labels['AHF'] = r'Anthropogenic heat flux ($\mathrm{W\/m^{-2}}$)'
     labels['WS'] = r'$\mathrm{{\Delta}}$(Wind Speed) ($\mathrm{m\/s^{-1}}$)'
     labels['PBLH'] = r'$\mathrm{{\Delta}}$PBLH (m)'

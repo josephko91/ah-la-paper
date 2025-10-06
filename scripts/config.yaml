@@ -1,7 +1,7 @@
 ### =====  User-defined variables/parameters/paths ===== ###
 
 # Urban area vector file
-urban_area_file: "/home1/kojoseph/ah-la-paper/data/wrf_urban_mask-v2.gpkg"
+urban_area_file: "/home1/kojoseph/ah-la-paper/data/wrf_urban_mask-v4.gpkg"
 
 # LA County boundary file
 la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/boundaries/la_county_bound_simplified.gpkg"
@@ -10,10 +10,10 @@ la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/bo
 wrf_dir: "/project2/zhan248_1326/hhao4018/WRFv4.6.1_Modified_AHoption_noChem/test"
 
 # Where to save plots
-plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf-v2"
+plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf-v5"
 
 # Where to save processed delta df's
-deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf-v2"
+deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf-v5"
 
 # Variables for subsetting
 wrf_vars:
@@ -21,6 +21,7 @@ wrf_vars:
   - "TC_URB"
   - "WS"
   - "PBLH"
+  - "FRC_URB2D"
 
 # Seasonal map
 season_map:
@@ -84,7 +85,6 @@ line_plot_vis_settings:
   grid_linewidth: 0.5
   grid_alpha: 0.5
   grid_linestyle: "--"
-  grid_linewidth: 1
   lineplot_cmap: "magma"
 
 # Visual settings for diurnal animations
