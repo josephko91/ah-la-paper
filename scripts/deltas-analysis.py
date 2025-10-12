@@ -114,6 +114,13 @@ def process_delta(control_path, target_path, wrf_vars, la_county_gdf, month):
         frc_urb2d_copy.attrs.pop('grid_mapping', None)
         # Insert into delta
         delta['FRC_URB2D'] = frc_urb2d_copy
+    if 'AHFLLUX' in wrf_vars:
+        # Copy the variable to avoid sharing attributes
+        ahflux_copy = ds_control['AHFLUX'].copy()
+        # Remove the conflicting grid_mapping attribute
+        ahflux_copy.attrs.pop('grid_mapping', None)
+        # Insert into delta
+        delta['AHFLLUX'] = ahflux_copy
 
     # assign crs
     wrf_crs = ds_control.wrf_projection.item()
@@ -208,7 +215,7 @@ def calculate_deltas(months, control_target_pairs, wrf_dir_map, wrf_dir, wrf_var
             delta_clipped.to_netcdf(delta_savepath)
             deltas[delta_key] = delta_clipped
             # save non-clipped deltas
-            deltas_all_dir = os.path.join(deltas_dir, '..', 'deltas-all-wrf-v5')
+            deltas_all_dir = os.path.join(deltas_dir, '..', 'deltas-all-wrf-v7')
             os.makedirs(deltas_all_dir, exist_ok=True)
             delta_all_savepath = os.path.join(deltas_all_dir, delta_filename)
             # delta = fix_time_encoding(delta)

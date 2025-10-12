@@ -10,10 +10,10 @@ la_county_boundary_file: "/home1/kojoseph/anthropogenic-heat-la-20230205/data/bo
 wrf_dir: "/project2/zhan248_1326/hhao4018/WRFv4.6.1_Modified_AHoption_noChem/test"
 
 # Where to save plots
-plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf-v5"
+plot_dir: "/home1/kojoseph/ah-la-paper/figs/figs-urban-wrf-v7"
 
 # Where to save processed delta df's
-deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf-v5"
+deltas_dir: "/home1/kojoseph/ah-la-paper/data/deltas-urban-wrf-v7"
 
 # Variables for subsetting
 wrf_vars:
@@ -22,6 +22,7 @@ wrf_vars:
   - "WS"
   - "PBLH"
   - "FRC_URB2D"
+  - "AHFLUX"
 
 # Seasonal map
 season_map:
@@ -39,6 +40,9 @@ control_target_pairs:
   - ["ah_default", "ah_elec_low"]
   - ["ah_default", "ah_elec_medium"]
   - ["ah_default", "ah_elec_high"]
+  - ["ah_off", "ah_elec_low"]
+  - ["ah_off", "ah_elec_medium"]
+  - ["ah_off", "ah_elec_high"]
 
 # Dictionary that maps months/case combo with directory paths 
 wrf_dir_map:
